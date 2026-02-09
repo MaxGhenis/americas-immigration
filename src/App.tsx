@@ -66,11 +66,21 @@ function fmt(n: number): string {
 function AnimatedBar({ value, max }: { value: number; max: number }) {
   const [width, setWidth] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
+  const triggered = useRef(false)
 
   useEffect(() => {
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setWidth((value / max) * 100); obs.disconnect() } },
-      { threshold: 0.2 }
+      ([e]) => {
+        if (e.isIntersecting && !triggered.current) {
+          triggered.current = true
+          // Small delay so animation is visible after scroll
+          requestAnimationFrame(() => {
+            setWidth((value / max) * 100)
+          })
+          obs.disconnect()
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
     )
     if (ref.current) obs.observe(ref.current)
     return () => obs.disconnect()
@@ -108,9 +118,8 @@ function StatStrip() {
 }
 
 function OriginChart() {
-  const americasTotal = immigrantOrigins
-    .filter(d => d.americas)
-    .reduce((s, d) => s + d.share, 0)
+  // MPI reports ~54% from the Americas; individual shares are approximate
+  const americasTotal = 54
 
   const colors = immigrantOrigins.map((d, i) =>
     d.americas ? AMERICAS_DOUGHNUT[i] : OTHER_DOUGHNUT[i - 5]
