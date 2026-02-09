@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -64,31 +64,10 @@ function fmt(n: number): string {
 }
 
 function AnimatedBar({ value, max }: { value: number; max: number }) {
-  const [width, setWidth] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-  const triggered = useRef(false)
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      ([e]) => {
-        if (e.isIntersecting && !triggered.current) {
-          triggered.current = true
-          // Small delay so animation is visible after scroll
-          requestAnimationFrame(() => {
-            setWidth((value / max) * 100)
-          })
-          obs.disconnect()
-        }
-      },
-      { threshold: 0.1, rootMargin: '50px' }
-    )
-    if (ref.current) obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [value, max])
-
+  const pct = (value / max) * 100
   return (
-    <div className="bar-track" ref={ref}>
-      <div className="bar-fill" style={{ width: `${width}%` }} />
+    <div className="bar-track">
+      <div className="bar-fill" style={{ width: `${pct}%` }} />
     </div>
   )
 }
