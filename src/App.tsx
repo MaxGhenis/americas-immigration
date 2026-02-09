@@ -296,16 +296,18 @@ function ICEChart() {
       <p className="source-line">{sourceLine}</p>
 
       {/* Toggle controls */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Source:</span>
-          <ToggleButton active={source === 'berkeley'} onClick={() => setSource('berkeley')}>Berkeley FOIA</ToggleButton>
-          <ToggleButton active={source === 'ero'} onClick={() => setSource('ero')}>ICE ERO</ToggleButton>
-        </div>
-        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Show:</span>
-          <ToggleButton active={display === 'absolute'} onClick={() => setDisplay('absolute')}>Count</ToggleButton>
-          <ToggleButton active={display === 'share'} onClick={() => setDisplay('share')}>% of total</ToggleButton>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Source:</span>
+            <ToggleButton active={source === 'berkeley'} onClick={() => setSource('berkeley')}>Berkeley FOIA</ToggleButton>
+            <ToggleButton active={source === 'ero'} onClick={() => setSource('ero')}>ICE ERO</ToggleButton>
+          </div>
+          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Show:</span>
+            <ToggleButton active={display === 'absolute'} onClick={() => setDisplay('absolute')}>Count</ToggleButton>
+            <ToggleButton active={display === 'share'} onClick={() => setDisplay('share')}>% of total</ToggleButton>
+          </div>
         </div>
         <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Period:</span>
