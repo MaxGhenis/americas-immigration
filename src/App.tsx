@@ -13,16 +13,18 @@ ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip)
 
 // ── DATA ──
 
+// ACS 2024 1-Year Estimates, Table B05006 (data.census.gov)
+// Asia excludes Western Asia; MENA = Western Asia + Northern Africa
 const immigrantOrigins = [
-  { region: 'Mexico', share: 22, americas: true },
-  { region: 'Caribbean', share: 10, americas: true },
-  { region: 'Central America', share: 8, americas: true },
-  { region: 'South America', share: 8, americas: true },
-  { region: 'Canada', share: 2, americas: true },
-  { region: 'Asia', share: 27, americas: false },
-  { region: 'Europe', share: 10, americas: false },
-  { region: 'Sub-Saharan Africa', share: 5, americas: false },
-  { region: 'Middle East / N. Africa', share: 4, americas: false },
+  { region: 'Mexico', share: 22.2, americas: true },
+  { region: 'Caribbean', share: 10.5, americas: true },
+  { region: 'Central America', share: 9.1, americas: true },
+  { region: 'South America', share: 9.6, americas: true },
+  { region: 'Canada', share: 1.6, americas: true },
+  { region: 'Asia', share: 28.1, americas: false },
+  { region: 'Europe', share: 9.7, americas: false },
+  { region: 'Sub-Saharan Africa', share: 5.0, americas: false },
+  { region: 'Middle East / N. Africa', share: 3.6, americas: false },
 ]
 
 // Berkeley FOIA data (Trump era: Jan 20 – Oct 15, 2025)
@@ -100,7 +102,7 @@ const iceEroByFY = [
 ]
 
 const AMERICAS_SHARE_ICE = ((BERKELEY_AMERICAS / BERKELEY_TOTAL) * 100).toFixed(1)
-const AMERICAS_SHARE_POP = 54
+const AMERICAS_SHARE_POP = 53
 
 // ── COLORS ──
 
@@ -139,8 +141,8 @@ function StatStrip() {
     <div className="stat-strip">
       <div className="stat-card">
         <div className="label">Foreign-born in US</div>
-        <div className="value">~51M</div>
-        <div className="detail">~54% from the Americas</div>
+        <div className="value">~50M</div>
+        <div className="detail">~53% from the Americas</div>
       </div>
       <div className="stat-card accent">
         <div className="label">ICE arrests (2025)</div>
@@ -157,8 +159,8 @@ function StatStrip() {
 }
 
 function OriginChart() {
-  // MPI reports ~54% from the Americas; individual shares are approximate
-  const americasTotal = 54
+  // ACS 2024 B05006: Americas = 26.6M of 50.2M = 53.0%
+  const americasTotal = 53
 
   const colors = immigrantOrigins.map((d, i) =>
     d.americas ? AMERICAS_DOUGHNUT[i] : OTHER_DOUGHNUT[i - 5]
@@ -179,7 +181,7 @@ function OriginChart() {
     <div className="section-card">
       <h3>Where US immigrants come from</h3>
       <p className="source-line">
-        Share of ~51M foreign-born · <a href="https://www.migrationpolicy.org/article/frequently-requested-statistics-immigrants-and-immigration-united-states" target="_blank" rel="noopener">MPI</a> analysis of <a href="https://www.census.gov/library/visualizations/interactive/foreign-born-population-2019-2023.html" target="_blank" rel="noopener">ACS 2023</a>
+        Share of ~50M foreign-born · <a href="https://data.census.gov/table/ACSDT1Y2024.B05006" target="_blank" rel="noopener">ACS 2024</a> (Table B05006)
       </p>
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ width: 200, height: 200, flexShrink: 0 }}>
@@ -196,7 +198,7 @@ function OriginChart() {
                   titleFont: { family: "'DM Sans', sans-serif", size: 13 },
                   bodyFont: { family: "'DM Sans', sans-serif", size: 12 },
                   callbacks: {
-                    label: ctx => ` ${ctx.label}: ~${ctx.raw}%`,
+                    label: ctx => ` ${ctx.label}: ${Number(ctx.raw).toFixed(1)}%`,
                   },
                 },
               },
@@ -209,13 +211,13 @@ function OriginChart() {
               <div className="legend-item" key={d.region}>
                 <span className="legend-dot" style={{ background: colors[i] }} />
                 <span className="legend-label">{d.region}</span>
-                <span className="legend-value">~{d.share}%</span>
+                <span className="legend-value">{d.share.toFixed(1)}%</span>
               </div>
             ))}
           </div>
           <div className="legend-total">
             <span>Americas total</span>
-            <span>~{americasTotal}%</span>
+            <span>{americasTotal}%</span>
           </div>
         </div>
       </div>
@@ -399,7 +401,7 @@ function ComparisonSection() {
             <span className="bar-value">{AMERICAS_SHARE_POP}%</span>
           </div>
           <AnimatedBar value={AMERICAS_SHARE_POP} max={100} />
-          <div className="bar-source">ACS 2023 via Migration Policy Institute</div>
+          <div className="bar-source">ACS 2024, Table B05006</div>
         </div>
         <div className="bar-group">
           <div className="bar-header">
@@ -411,7 +413,7 @@ function ComparisonSection() {
         </div>
       </div>
       <div className="callout">
-        54% of the foreign-born population comes from the Americas, but {AMERICAS_SHARE_ICE}% of ICE arrests in this period involved people from the Americas. A <a href="https://knowledge.luskin.ucla.edu/wp-content/uploads/2025/10/Unseen_Latino-Ice-Arrests-Surge-Under-Trump_20251027.pdf" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)' }}>UCLA Luskin study</a> found ~90% of arrests targeted "Latinos" — defined as individuals from Latin American countries, using the same FOIA data.
+        53% of the foreign-born population comes from the Americas, but {AMERICAS_SHARE_ICE}% of ICE arrests in this period involved people from the Americas. A <a href="https://knowledge.luskin.ucla.edu/wp-content/uploads/2025/10/Unseen_Latino-Ice-Arrests-Surge-Under-Trump_20251027.pdf" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)' }}>UCLA Luskin study</a> found ~90% of arrests targeted "Latinos" — defined as individuals from Latin American countries, using the same FOIA data.
       </div>
     </div>
   )
@@ -483,7 +485,7 @@ export default function App() {
 
       <footer className="dashboard-footer">
         <p>
-          Sources: <a href="https://www.migrationpolicy.org/article/frequently-requested-statistics-immigrants-and-immigration-united-states" target="_blank" rel="noopener">Migration Policy Institute</a> · <a href="https://www.census.gov/library/visualizations/interactive/foreign-born-population-2019-2023.html" target="_blank" rel="noopener">ACS 2023</a> · <a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE ERO</a> · <a href="https://deportationdata.org" target="_blank" rel="noopener">UC Berkeley Deportation Data Project</a> · <a href="https://knowledge.luskin.ucla.edu/wp-content/uploads/2025/10/Unseen_Latino-Ice-Arrests-Surge-Under-Trump_20251027.pdf" target="_blank" rel="noopener">UCLA Luskin</a>
+          Sources: <a href="https://data.census.gov/table/ACSDT1Y2024.B05006" target="_blank" rel="noopener">ACS 2024</a> · <a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE ERO</a> · <a href="https://deportationdata.org" target="_blank" rel="noopener">UC Berkeley Deportation Data Project</a> · <a href="https://knowledge.luskin.ucla.edu/wp-content/uploads/2025/10/Unseen_Latino-Ice-Arrests-Surge-Under-Trump_20251027.pdf" target="_blank" rel="noopener">UCLA Luskin</a>
         </p>
         <p style={{ marginTop: '0.5rem' }}>
           <a href="https://github.com/MaxGhenis/americas-immigration" target="_blank" rel="noopener">Source code</a> · Dashboard by Max Ghenis
