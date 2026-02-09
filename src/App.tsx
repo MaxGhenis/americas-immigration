@@ -11,20 +11,46 @@ import { Doughnut, Bar } from 'react-chartjs-2'
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip)
 
+// ── TYPES ──
+
+interface CensusRegion {
+  region: string
+  count: number
+  share: number
+  americas: boolean
+}
+
+interface CensusData {
+  source: string
+  source_url: string
+  total_foreign_born: number
+  regions: CensusRegion[]
+  americas_total_share: number
+}
+
+// Display name mapping (shorten pipeline names for chart)
+const REGION_DISPLAY: Record<string, string> = {
+  'Central America (ex Mexico)': 'Central America',
+  'Asia (ex Western Asia)': 'Asia',
+}
+
+function displayRegion(r: string): string {
+  return REGION_DISPLAY[r] || r
+}
+
 // ── DATA ──
 
-// ACS 2024 1-Year Estimates, Table B05006 (data.census.gov)
-// Asia excludes Western Asia; MENA = Western Asia + Northern Africa
-const immigrantOrigins = [
-  { region: 'Mexico', share: 22.2, americas: true },
-  { region: 'Caribbean', share: 10.5, americas: true },
-  { region: 'Central America', share: 9.1, americas: true },
-  { region: 'South America', share: 9.6, americas: true },
-  { region: 'Canada', share: 1.6, americas: true },
-  { region: 'Asia', share: 28.1, americas: false },
-  { region: 'Europe', share: 9.7, americas: false },
-  { region: 'Sub-Saharan Africa', share: 5.0, americas: false },
-  { region: 'Middle East / N. Africa', share: 3.6, americas: false },
+// Fallback data in case data.json hasn't loaded yet
+const FALLBACK_ORIGINS: CensusRegion[] = [
+  { region: 'Mexico', count: 11143711, share: 22.2, americas: true },
+  { region: 'Caribbean', count: 5253901, share: 10.5, americas: true },
+  { region: 'Central America (ex Mexico)', count: 4567313, share: 9.1, americas: true },
+  { region: 'South America', count: 4833833, share: 9.6, americas: true },
+  { region: 'Canada', count: 823843, share: 1.6, americas: true },
+  { region: 'Asia (ex Western Asia)', count: 14139137, share: 28.1, americas: false },
+  { region: 'Europe', count: 4861535, share: 9.7, americas: false },
+  { region: 'Sub-Saharan Africa', count: 2515753, share: 5.0, americas: false },
+  { region: 'Middle East / N. Africa', count: 1785341, share: 3.6, americas: false },
 ]
 
 // Berkeley FOIA data (Trump era: Jan 20 – Oct 15, 2025)
@@ -102,7 +128,6 @@ const iceEroByFY = [
 ]
 
 const AMERICAS_SHARE_ICE = ((BERKELEY_AMERICAS / BERKELEY_TOTAL) * 100).toFixed(1)
-const AMERICAS_SHARE_POP = 53
 
 // ── COLORS ──
 
@@ -136,13 +161,14 @@ function AnimatedBar({ value, max }: { value: number; max: number }) {
 
 // ── SECTIONS ──
 
-function StatStrip() {
+function StatStrip({ censusData }: { censusData: CensusData }) {
+  const totalM = Math.round(censusData.total_foreign_born / 1_000_000)
   return (
     <div className="stat-strip">
       <div className="stat-card">
         <div className="label">Foreign-born in US</div>
-        <div className="value">~50M</div>
-        <div className="detail">~53% from the Americas</div>
+        <div className="value">~{totalM}M</div>
+        <div className="detail">~{censusData.americas_total_share.toFixed(0)}% from the Americas</div>
       </div>
       <div className="stat-card accent">
         <div className="label">ICE arrests (2025)</div>
@@ -158,18 +184,19 @@ function StatStrip() {
   )
 }
 
-function OriginChart() {
-  // ACS 2024 B05006: Americas = 26.6M of 50.2M = 53.0%
-  const americasTotal = 53
+function OriginChart({ censusData }: { censusData: CensusData }) {
+  const regions = censusData.regions
+  const americasTotal = censusData.americas_total_share
+  const totalM = Math.round(censusData.total_foreign_born / 1_000_000)
 
-  const colors = immigrantOrigins.map((d, i) =>
+  const colors = regions.map((d, i) =>
     d.americas ? AMERICAS_DOUGHNUT[i] : OTHER_DOUGHNUT[i - 5]
   )
 
   const data = {
-    labels: immigrantOrigins.map(d => d.region),
+    labels: regions.map(d => displayRegion(d.region)),
     datasets: [{
-      data: immigrantOrigins.map(d => d.share),
+      data: regions.map(d => d.share),
       backgroundColor: colors,
       borderWidth: 2,
       borderColor: '#ffffff',
@@ -181,7 +208,7 @@ function OriginChart() {
     <div className="section-card">
       <h3>Where US immigrants come from</h3>
       <p className="source-line">
-        Share of ~50M foreign-born · <a href="https://data.census.gov/table/ACSDT1Y2024.B05006" target="_blank" rel="noopener">ACS 2024</a> (Table B05006)
+        Share of ~{totalM}M foreign-born · <a href={censusData.source_url} target="_blank" rel="noopener">{censusData.source.split(',')[0]}</a>
       </p>
       <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ width: 200, height: 200, flexShrink: 0 }}>
@@ -207,10 +234,10 @@ function OriginChart() {
         </div>
         <div style={{ flex: 1, minWidth: 200 }}>
           <div className="legend">
-            {immigrantOrigins.map((d, i) => (
+            {regions.map((d, i) => (
               <div className="legend-item" key={d.region}>
                 <span className="legend-dot" style={{ background: colors[i] }} />
-                <span className="legend-label">{d.region}</span>
+                <span className="legend-label">{displayRegion(d.region)}</span>
                 <span className="legend-value">{d.share.toFixed(1)}%</span>
               </div>
             ))}
@@ -389,7 +416,8 @@ function ICEChart() {
   )
 }
 
-function ComparisonSection() {
+function ComparisonSection({ censusData }: { censusData: CensusData }) {
+  const popShare = censusData.americas_total_share
   return (
     <div className="section-card">
       <h3>Immigration vs. enforcement</h3>
@@ -398,10 +426,10 @@ function ComparisonSection() {
         <div className="bar-group">
           <div className="bar-header">
             <span className="bar-label">Foreign-born population</span>
-            <span className="bar-value">{AMERICAS_SHARE_POP}%</span>
+            <span className="bar-value">{popShare}%</span>
           </div>
-          <AnimatedBar value={AMERICAS_SHARE_POP} max={100} />
-          <div className="bar-source">ACS 2024, Table B05006</div>
+          <AnimatedBar value={popShare} max={100} />
+          <div className="bar-source">{censusData.source}</div>
         </div>
         <div className="bar-group">
           <div className="bar-header">
@@ -413,7 +441,7 @@ function ComparisonSection() {
         </div>
       </div>
       <div className="callout">
-        53% of the foreign-born population comes from the Americas, but {AMERICAS_SHARE_ICE}% of ICE arrests in this period involved people from the Americas. A <a href="https://knowledge.luskin.ucla.edu/wp-content/uploads/2025/10/Unseen_Latino-Ice-Arrests-Surge-Under-Trump_20251027.pdf" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)' }}>UCLA Luskin study</a> found ~90% of arrests targeted "Latinos" — defined as individuals from Latin American countries, using the same FOIA data.
+        {popShare}% of the foreign-born population comes from the Americas, but {AMERICAS_SHARE_ICE}% of ICE arrests in this period involved people from the Americas. A <a href="https://knowledge.luskin.ucla.edu/wp-content/uploads/2025/10/Unseen_Latino-Ice-Arrests-Surge-Under-Trump_20251027.pdf" target="_blank" rel="noopener" style={{ color: 'var(--terracotta)' }}>UCLA Luskin study</a> found ~90% of arrests targeted "Latinos" — defined as individuals from Latin American countries, using the same FOIA data.
       </div>
     </div>
   )
@@ -454,11 +482,24 @@ function MetroSurge() {
 // ── MAIN ──
 
 export default function App() {
+  const [censusData, setCensusData] = useState<CensusData>({
+    source: 'ACS 2024 1-Year Estimates, Table B05006',
+    source_url: 'https://data.census.gov/table/ACSDT1Y2024.B05006',
+    total_foreign_born: 50234841,
+    regions: FALLBACK_ORIGINS,
+    americas_total_share: 53.0,
+  })
+
   useEffect(() => {
     // Enable embed mode if loaded in iframe
     if (window !== window.parent) {
       document.body.classList.add('embed-mode')
     }
+    // Load census data from pipeline-generated JSON
+    fetch('/data.json')
+      .then(r => r.json())
+      .then((d: CensusData) => setCensusData(d))
+      .catch(() => {}) // fallback data already set
   }, [])
 
   return (
@@ -470,15 +511,15 @@ export default function App() {
         </p>
       </header>
 
-      <StatStrip />
+      <StatStrip censusData={censusData} />
 
       <div className="chart-grid">
-        <OriginChart />
+        <OriginChart censusData={censusData} />
         <ICEChart />
       </div>
 
       <div className="chart-grid">
-        <ComparisonSection />
+        <ComparisonSection censusData={censusData} />
         <MetroSurge />
       </div>
 
