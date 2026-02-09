@@ -307,14 +307,16 @@ function ICEChart() {
           <ToggleButton active={display === 'absolute'} onClick={() => setDisplay('absolute')}>Count</ToggleButton>
           <ToggleButton active={display === 'share'} onClick={() => setDisplay('share')}>% of total</ToggleButton>
         </div>
-        {source === 'ero' && (
-          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Year:</span>
-            {iceEroByFY.map(d => (
+        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Year:</span>
+          {source === 'berkeley' ? (
+            <ToggleButton active={true} onClick={() => {}}>2025</ToggleButton>
+          ) : (
+            iceEroByFY.map(d => (
               <ToggleButton key={d.fy} active={selectedFY === d.fy} onClick={() => setSelectedFY(d.fy)}>{d.fy.replace('FY', '')}</ToggleButton>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
 
       {/* Americas share callout */}
