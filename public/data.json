@@ -1,0 +1,62 @@
+{
+  "source": "ACS 2024 1-Year Estimates, Table B05006",
+  "source_url": "https://data.census.gov/table/ACSDT1Y2024.B05006",
+  "total_foreign_born": 50234841,
+  "regions": [
+    {
+      "region": "Mexico",
+      "count": 11143711,
+      "share": 22.2,
+      "americas": true
+    },
+    {
+      "region": "Caribbean",
+      "count": 5253901,
+      "share": 10.5,
+      "americas": true
+    },
+    {
+      "region": "Central America (ex Mexico)",
+      "count": 4567313,
+      "share": 9.1,
+      "americas": true
+    },
+    {
+      "region": "South America",
+      "count": 4833833,
+      "share": 9.6,
+      "americas": true
+    },
+    {
+      "region": "Canada",
+      "count": 823843,
+      "share": 1.6,
+      "americas": true
+    },
+    {
+      "region": "Asia (ex Western Asia)",
+      "count": 14139137,
+      "share": 28.1,
+      "americas": false
+    },
+    {
+      "region": "Europe",
+      "count": 4861535,
+      "share": 9.7,
+      "americas": false
+    },
+    {
+      "region": "Sub-Saharan Africa",
+      "count": 2515753,
+      "share": 5.0,
+      "americas": false
+    },
+    {
+      "region": "Middle East / N. Africa",
+      "count": 1785341,
+      "share": 3.6,
+      "americas": false
+    }
+  ],
+  "americas_total_share": 53.0
+}
