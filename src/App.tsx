@@ -263,7 +263,7 @@ function ICEChart() {
     chartData = berkeleyArrests
     total = BERKELEY_TOTAL
     sourceLine = (
-      <>Jan 20 – Oct 15, 2025 · <a href="https://deportationdata.org" target="_blank" rel="noopener">UC Berkeley Deportation Data Project</a> (FOIA)</>
+      <><a href="https://deportationdata.org" target="_blank" rel="noopener">UC Berkeley Deportation Data Project</a> (FOIA)</>
     )
     chartColors = [...TERRACOTTA_RAMP, GREY]
   } else {
@@ -271,7 +271,7 @@ function ICEChart() {
     chartData = fyData.top
     total = fyData.total
     sourceLine = (
-      <>{selectedFY}{selectedFY === 'FY2025 Q1' ? ' (Oct–Dec 2024)' : ''} · <a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE ERO official statistics</a></>
+      <><a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE ERO official statistics</a></>
     )
     chartColors = [...TERRACOTTA_RAMP, GREY]
   }
@@ -308,12 +308,14 @@ function ICEChart() {
           <ToggleButton active={display === 'share'} onClick={() => setDisplay('share')}>% of total</ToggleButton>
         </div>
         <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Year:</span>
+          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Period:</span>
           {source === 'berkeley' ? (
-            <ToggleButton active={true} onClick={() => {}}>2025</ToggleButton>
+            <ToggleButton active={true} onClick={() => {}}>Jan 20 – Oct 15, 2025</ToggleButton>
           ) : (
             iceEroByFY.map(d => (
-              <ToggleButton key={d.fy} active={selectedFY === d.fy} onClick={() => setSelectedFY(d.fy)}>{d.fy.replace('FY', '')}</ToggleButton>
+              <ToggleButton key={d.fy} active={selectedFY === d.fy} onClick={() => setSelectedFY(d.fy)}>
+                {d.fy.replace('FY', 'FY ')}
+              </ToggleButton>
             ))
           )}
         </div>
