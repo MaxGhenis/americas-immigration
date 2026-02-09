@@ -464,7 +464,6 @@ export default function App() {
   return (
     <div className="dashboard">
       <header className="dashboard-header">
-        <div className="eyebrow">Data</div>
         <h1>Immigration & enforcement in the Americas</h1>
         <p className="subtitle">
           Data on where US immigrants come from, what languages they speak, and who ICE enforcement targets — compiled from official sources.
