@@ -322,7 +322,6 @@ function ICEChart() {
   return (
     <div className="section-card">
       <h3>ICE arrests by nationality</h3>
-      <p className="source-line">{sourceLine}</p>
 
       {/* Toggle controls */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
@@ -412,6 +411,7 @@ function ICEChart() {
           }}
         />
       </div>
+      <p style={{ fontSize: '0.625rem', color: 'var(--ink-muted)', marginTop: '0.5rem', textAlign: 'right' }}>{sourceLine}</p>
     </div>
   )
 }
