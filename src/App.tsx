@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Chart as ChartJS,
   ArcElement,
@@ -25,7 +25,8 @@ const immigrantOrigins = [
   { region: 'Middle East / N. Africa', share: 4, americas: false },
 ]
 
-const iceArrests = [
+// Berkeley FOIA data (Trump era: Jan 20 – Oct 15, 2025)
+const berkeleyArrests = [
   { country: 'Mexico', arrests: 85363 },
   { country: 'Guatemala', arrests: 31231 },
   { country: 'Honduras', arrests: 24296 },
@@ -36,10 +37,69 @@ const iceArrests = [
   { country: 'Other Americas', arrests: 19549 },
   { country: 'Non-Americas', arrests: 16403 },
 ]
+const BERKELEY_TOTAL = 220931
+const BERKELEY_AMERICAS = 204528
 
-const TOTAL_ICE = 220931
-const AMERICAS_ICE = 204528
-const AMERICAS_SHARE_ICE = ((AMERICAS_ICE / TOTAL_ICE) * 100).toFixed(1)
+// Official ICE ERO data by fiscal year
+const iceEroByFY = [
+  { fy: 'FY2021', total: 59725, americas: 59337, top: [
+    { country: 'Mexico', arrests: 27528 },
+    { country: 'Honduras', arrests: 9399 },
+    { country: 'Guatemala', arrests: 7099 },
+    { country: 'Ecuador', arrests: 4022 },
+    { country: 'El Salvador', arrests: 3742 },
+    { country: 'Venezuela', arrests: 2246 },
+    { country: 'Haiti', arrests: 1792 },
+    { country: 'Nicaragua', arrests: 1705 },
+    { country: 'Non-Americas', arrests: 388 },
+  ]},
+  { fy: 'FY2022', total: 122443, americas: 120319, top: [
+    { country: 'Mexico', arrests: 27529 },
+    { country: 'Venezuela', arrests: 16415 },
+    { country: 'Honduras', arrests: 14814 },
+    { country: 'Nicaragua', arrests: 10046 },
+    { country: 'Colombia', arrests: 9689 },
+    { country: 'Cuba', arrests: 8419 },
+    { country: 'Guatemala', arrests: 8333 },
+    { country: 'Ecuador', arrests: 7663 },
+    { country: 'Non-Americas', arrests: 2124 },
+  ]},
+  { fy: 'FY2023', total: 146474, americas: 144426, top: [
+    { country: 'Mexico', arrests: 41611 },
+    { country: 'Nicaragua', arrests: 20162 },
+    { country: 'Venezuela', arrests: 15962 },
+    { country: 'Colombia', arrests: 13796 },
+    { country: 'Cuba', arrests: 12001 },
+    { country: 'Honduras', arrests: 9616 },
+    { country: 'Guatemala', arrests: 7916 },
+    { country: 'Peru', arrests: 6899 },
+    { country: 'Non-Americas', arrests: 2048 },
+  ]},
+  { fy: 'FY2024', total: 88907, americas: 88006, top: [
+    { country: 'Mexico', arrests: 42477 },
+    { country: 'Guatemala', arrests: 10701 },
+    { country: 'Honduras', arrests: 10443 },
+    { country: 'Nicaragua', arrests: 7182 },
+    { country: 'Ecuador', arrests: 3529 },
+    { country: 'Venezuela', arrests: 3185 },
+    { country: 'El Salvador', arrests: 3020 },
+    { country: 'Colombia', arrests: 2743 },
+    { country: 'Non-Americas', arrests: 901 },
+  ]},
+  { fy: 'FY2025 Q1', total: 20453, americas: 20438, top: [
+    { country: 'Mexico', arrests: 11274 },
+    { country: 'Honduras', arrests: 2743 },
+    { country: 'Guatemala', arrests: 2713 },
+    { country: 'El Salvador', arrests: 799 },
+    { country: 'Nicaragua', arrests: 755 },
+    { country: 'Venezuela', arrests: 501 },
+    { country: 'Ecuador', arrests: 464 },
+    { country: 'Colombia', arrests: 334 },
+    { country: 'Non-Americas', arrests: 15 },
+  ]},
+]
+
+const AMERICAS_SHARE_ICE = ((BERKELEY_AMERICAS / BERKELEY_TOTAL) * 100).toFixed(1)
 const AMERICAS_SHARE_POP = 54
 
 // ── COLORS ──
@@ -163,12 +223,68 @@ function OriginChart() {
   )
 }
 
+type IceSource = 'berkeley' | 'ero'
+type IceDisplay = 'absolute' | 'share'
+
+function ToggleButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        padding: '0.25rem 0.625rem',
+        fontSize: '0.6875rem',
+        fontWeight: active ? 700 : 500,
+        fontFamily: "'DM Sans', sans-serif",
+        background: active ? 'var(--terracotta)' : 'var(--warm-off)',
+        color: active ? 'white' : 'var(--ink-muted)',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        transition: 'all 0.15s ease',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
 function ICEChart() {
+  const [source, setSource] = useState<IceSource>('berkeley')
+  const [display, setDisplay] = useState<IceDisplay>('absolute')
+  const [selectedFY, setSelectedFY] = useState('FY2024')
+
+  // Build chart data based on selections
+  let chartData: { country: string; arrests: number }[]
+  let total: number
+  let sourceLine: React.ReactNode
+  let chartColors: string[]
+
+  if (source === 'berkeley') {
+    chartData = berkeleyArrests
+    total = BERKELEY_TOTAL
+    sourceLine = (
+      <>Jan 20 – Oct 15, 2025 · <a href="https://deportationdata.org" target="_blank" rel="noopener">UC Berkeley Deportation Data Project</a> (FOIA)</>
+    )
+    chartColors = [...TERRACOTTA_RAMP, GREY]
+  } else {
+    const fyData = iceEroByFY.find(d => d.fy === selectedFY)!
+    chartData = fyData.top
+    total = fyData.total
+    sourceLine = (
+      <>{selectedFY}{selectedFY === 'FY2025 Q1' ? ' (Oct–Dec 2024)' : ''} · <a href="https://www.ice.gov/statistics" target="_blank" rel="noopener">ICE ERO official statistics</a></>
+    )
+    chartColors = [...TERRACOTTA_RAMP, GREY]
+  }
+
+  const values = display === 'share'
+    ? chartData.map(d => (d.arrests / total) * 100)
+    : chartData.map(d => d.arrests)
+
   const data = {
-    labels: iceArrests.map(d => d.country),
+    labels: chartData.map(d => d.country),
     datasets: [{
-      data: iceArrests.map(d => d.arrests),
-      backgroundColor: [...TERRACOTTA_RAMP, GREY],
+      data: values,
+      backgroundColor: chartColors,
       borderWidth: 0,
       borderRadius: 3,
     }],
@@ -177,9 +293,45 @@ function ICEChart() {
   return (
     <div className="section-card">
       <h3>ICE arrests by nationality</h3>
-      <p className="source-line">
-        Jan 20 – Oct 15, 2025 · <a href="https://deportationdata.org" target="_blank" rel="noopener">UC Berkeley Deportation Data Project</a> (FOIA)
-      </p>
+      <p className="source-line">{sourceLine}</p>
+
+      {/* Toggle controls */}
+      <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Source:</span>
+          <ToggleButton active={source === 'berkeley'} onClick={() => setSource('berkeley')}>Berkeley FOIA</ToggleButton>
+          <ToggleButton active={source === 'ero'} onClick={() => setSource('ero')}>ICE ERO</ToggleButton>
+        </div>
+        <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Show:</span>
+          <ToggleButton active={display === 'absolute'} onClick={() => setDisplay('absolute')}>Count</ToggleButton>
+          <ToggleButton active={display === 'share'} onClick={() => setDisplay('share')}>% of total</ToggleButton>
+        </div>
+        {source === 'ero' && (
+          <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.6875rem', color: 'var(--ink-muted)', marginRight: '0.25rem' }}>Year:</span>
+            {iceEroByFY.map(d => (
+              <ToggleButton key={d.fy} active={selectedFY === d.fy} onClick={() => setSelectedFY(d.fy)}>{d.fy.replace('FY', '')}</ToggleButton>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Americas share callout */}
+      {source === 'ero' && (
+        <div style={{
+          fontSize: '0.75rem',
+          color: 'var(--terracotta)',
+          fontWeight: 600,
+          marginBottom: '0.75rem',
+        }}>
+          {(() => {
+            const fy = iceEroByFY.find(d => d.fy === selectedFY)!
+            return `${(fy.americas / fy.total * 100).toFixed(1)}% from the Americas · ${fy.total.toLocaleString()} total arrests`
+          })()}
+        </div>
+      )}
+
       <div style={{ height: 320 }}>
         <Bar
           data={data}
@@ -195,8 +347,10 @@ function ICEChart() {
                 bodyFont: { family: "'DM Sans', sans-serif", size: 12 },
                 callbacks: {
                   label: ctx => {
-                    const v = ctx.raw as number
-                    return ` ${v.toLocaleString()} arrests (${((v / TOTAL_ICE) * 100).toFixed(1)}%)`
+                    const idx = ctx.dataIndex
+                    const abs = chartData[idx].arrests
+                    const pct = ((abs / total) * 100).toFixed(1)
+                    return ` ${abs.toLocaleString()} arrests (${pct}%)`
                   },
                 },
               },
@@ -207,7 +361,9 @@ function ICEChart() {
                 ticks: {
                   font: { family: "'DM Sans', sans-serif", size: 11 },
                   color: '#7c7c9a',
-                  callback: v => fmt(v as number),
+                  callback: v => display === 'share'
+                    ? `${(v as number).toFixed(0)}%`
+                    : fmt(v as number),
                 },
               },
               y: {
